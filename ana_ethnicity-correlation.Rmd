@@ -1,0 +1,155 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r packages}
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("agridat")
+library(agridat)
+```
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r load the data}
+rt_raw = read.csv('data/rt_tidy.csv')
+summary(rt_raw)
+#unique(rt_raw$ΕΛΛΗΝΙΚΗ)
+```
+
+```{r extract data}
+#select the most typical ethnicities: white, asian, black
+races = filter(rt_raw, ΕΛΛΗΝΙΚΗ %in% c ("white", "Black",  "Hispanic/Latina",  "Hispanic/Latino", "Asian"))
+white = filter(races, ΕΛΛΗΝΙΚΗ == "white")
+asian = filter(races, ΕΛΛΗΝΙΚΗ == "Asian")
+black = filter(races, ΕΛΛΗΝΙΚΗ == "Black")
+latino = filter(races, ΕΛΛΗΝΙΚΗ %in% c ("Hispanic/Latina",  "Hispanic/Latino"))
+
+```
+
+
+```{r test anova}
+#test whether white people are quicker in judging white faces
+
+
+praces = ggplot(data = races, ) + 
+  geom_boxplot(mapping = aes(x = ethnicity.y, y = rt))
+praces
+
+praces = ggplot(races, aes(x = rt , y = ΕΛΛΗΝΙΚΗ, fill = ethnicity.y)) + 
+  geom_boxplot()
+praces
+
+#anova
+mwhite = aov(rt ~ ethnicity.y, data=white)
+summary(mwhite)
+
+#conclusion: generally speaking, there's no self-face advantage, quite the opposite, there seems to be a disadvantage (people are not slower in judging their own faces)
+
+#Question:  why is it the case?
+#Hypothesis1: we have too many irrelevant variables at work here: like face, trait
+#Hypothesis2: the white people are not necessarily "white" they may come from other races
+
+```
+
+
+
+
+
+```{r in single trait}
+#test hypothesis 1.1 narrow the focus to one single trait
+
+#------------sociable
+#across all groups white people's reaction in general
+sociable = filter (races, trait == "sociable")
+psociable = ggplot(data = sociable) + 
+  geom_boxplot(mapping = aes(x = ethnicity.y, y = rt))
+psociable
+
+#white people generally judged slower?
+#narrow the scope to one trait, one race
+
+white_sociable = filter(white, trait =="caring")
+pwhite_sociable = ggplot(data = white_sociable) + 
+  geom_boxplot(mapping = aes(x = ethnicity.y, y = rt))
+mwhite_sociable= aov(rt ~ ethnicity.y, data=white_sociable)
+mwhite_sociable
+
+#---------caring
+
+#across all groups white people's reaction in general
+caring = filter (races, trait == "caring")
+pcaring = ggplot(data = caring) + 
+  geom_boxplot(mapping = aes(x = ethnicity.y, y = rt))
+pcaring
+
+#white people generally judged slower?
+#narrow the scope to one trait, one race
+white_caring = filter(white, trait =="caring")
+pwhite_caring = ggplot(data = white_caring) + 
+  geom_boxplot(mapping = aes(x = ethnicity.y, y = rt))
+pwhite_caring
+
+#------------traits comparison in white only
+ptraitsall = ggplot(races, aes(x = rt , y = trait, fill = ethnicity.y)) + 
+  geom_boxplot()
+ptraitsall
+
+ptraitswhite = ggplot(white, aes(x = rt , y = trait, fill = ethnicity.y)) + 
+  geom_boxplot()
+ptraitswhite
+
+ptraitsblack = ggplot(black, aes(x = rt , y = trait, fill = ethnicity.y)) + 
+  geom_boxplot()
+ptraitsblack
+
+ptraitsasian = ggplot(asian, aes(x = rt , y = trait, fill = ethnicity.y)) + 
+  geom_boxplot()
+ptraitsasian
+
+#conclusion: by comparing traits in different races, we can find 
+#            1) white people are quicker in judging social
+#            2) black people are quicker in judging trustworthy and aggressive 
+#            3) asian people are quicker in judging attractiveness 
+#            that is to say 
+#tip: to find out what's specific about one race, we need to compare it with other races
+```
+```{r single trait and single face}
+#test1.2 narrow the scope to one face
+#rq: whether asian are quicker in judging one certain face among all asian faces
+
+asianfaces = filter (asian, Race == "A")
+
+pasianfaces= ggplot(asianfaces, aes(x = rt , y = stim_id)) + 
+     geom_boxplot()
+pasianfaces
+#pasianone= ggplot(asianfaces, aes(x = rt , y = trait, fill = ethnicity.y)) + 
+#  geom_boxplot()
+
+
+#test1.3 narrow the scope to one face, one trait
+asianfacesattractive = filter (asianfaces, trait == "attractive")
+pasianfacesattractive= ggplot(asianfacesattractive, aes(x = rt , y = stim_id)) + 
+     geom_boxplot()
+pasianfacesattractive
+
+#discovery: when the scope is smaller, the result is more varied, why
+```
+
+
+```{r draft}
+
+
+
+```
+

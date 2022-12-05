@@ -14,6 +14,13 @@ library(dplyr)
 library(ggplot2)
 #install.packages("agridat")
 library(agridat)
+#install.packages("sass")
+library(sass)
+#install.packages("randomForest")
+library(randomForest)
+#install.packages("ranger")
+library(ranger)
+
 ```
 
 
@@ -56,19 +63,20 @@ summary(mwhite)
 
 #conclusion: generally speaking, there's no self-face advantage, quite the opposite, there seems to be a disadvantage (people are not slower in judging their own faces)
 
-#Question:  why is it the case?
-#Hypothesis1: we have too many irrelevant variables at work here: like face, trait
-#Hypothesis2: the white people are not necessarily "white" they may come from other races
 
 ```
+#Question:  why is it the case?
+Hypothesis1: we have too many irrelevant variables at work here: like face, trait
+Hypothesis2: face traits interact with races, leading to a lag in judgment 
+Hypothesis3: the white people are not necessarily "white" they may come from other races
 
 
-
-
+#test hypothesis 1
+a "zoom in"/vertical approach, narrow the scope of variables taken into consideration
 
 ```{r in single trait}
-#test hypothesis 1.1 narrow the focus to one single trait
 
+# test hypohtesis 1.1 narrow the focus to one single trait
 #------------sociable
 #across all groups white people's reaction in general
 sociable = filter (races, trait == "sociable")
@@ -117,16 +125,18 @@ ptraitsasian = ggplot(asian, aes(x = rt , y = trait, fill = ethnicity.y)) +
   geom_boxplot()
 ptraitsasian
 
-#conclusion: by comparing traits in different races, we can find 
-#            1) white people are quicker in judging social
-#            2) black people are quicker in judging trustworthy and aggressive 
-#            3) asian people are quicker in judging attractiveness 
-#            that is to say 
-#tip: to find out what's specific about one race, we need to compare it with other races
+
 ```
+discovery: by comparing traits in different races, we can find 
+           1) white people are quicker in judging social
+           2) black people are quicker in judging trustworthy and aggressive 
+           3) asian people are quicker in judging attractiveness 
+           that is to say 
+tip: to find out what's specific about one race, we need to compare it with other races
+
 ```{r single trait and single face}
 #test1.2 narrow the scope to one face
-#rq: whether asian are quicker in judging one certain face among all asian faces
+#rq: whether asians are quicker in judging one certain face among all asian faces
 
 asianfaces = filter (asian, Race == "A")
 
@@ -134,7 +144,7 @@ pasianfaces= ggplot(asianfaces, aes(x = rt , y = stim_id)) +
      geom_boxplot()
 pasianfaces
 #pasianone= ggplot(asianfaces, aes(x = rt , y = trait, fill = ethnicity.y)) + 
-#  geom_boxplot()
+#geom_boxplot()
 
 
 #test1.3 narrow the scope to one face, one trait
@@ -142,12 +152,52 @@ asianfacesattractive = filter (asianfaces, trait == "attractive")
 pasianfacesattractive= ggplot(asianfacesattractive, aes(x = rt , y = stim_id)) + 
      geom_boxplot()
 pasianfacesattractive
+#conclusion: not applicable, because faces have different features, so it can't be narrowed to a single trait
+
+#test1.4, a follow-up of 1.2, what distinguishes AM225 from the others, are they are Asian than the rest and 
+#        how to set the criteria of "asian-typical"
+
+#????????????????????
 
 #discovery: when the scope is smaller, the result is more varied, why
+
 ```
+#test hypothesis 2
+question: how to dissociate the features of stimulus (gender, ra)
+a parallel appraoch, taking different variables into consideration at the same time
+
+```{r anova}
 
 
-```{r draft}
+#test 2.1 discreet - continuous?
+#     2.1.1 random forest
+mforest <- randomForest(rt ~ Race + Gender + Age + trait, data = asian, ntree = 500, mtry = 2, importance = TRUE)
+mforest
+
+mranger <- ranger(rt~Race + Gender + Age + trait,num.trees = 500,data = asian, mtry = 2,importance = "impurity")
+mranger
+
+temp = select(asian, rt, trait, Race, Gender, Age)
+mranger_imp <- data.frame(var=names(temp)[-1],imps = mranger$variable.importance/max(mranger$variable.importance))
+
+mranger_imp %>% 
+  ggplot(aes(imps,x=reorder(var,imps)))+
+  geom_point(size=3,colour="black")+
+  coord_flip()+
+  labs(x="predictor",y="importance")+
+  theme_bw(18)
+ 
+ # it turned out that race is the least immportant variable??????
+# the biggest question is: how to dissociate the factor of race from the rest
+
+#     2.1.2 other statistical methods, anova
+
+
+#test 2.2 convert race into continous variables 
+
+
+# is it necesary to include rating as well
+
 
 
 

@@ -20,6 +20,8 @@ library(sass)
 library(randomForest)
 #install.packages("ranger")
 library(ranger)
+#install.packages("magrittr")
+library(magrittr)
 
 ```
 
@@ -179,7 +181,6 @@ mranger
 
 temp = select(asian, rt, trait, Race, Gender, Age)
 mranger_imp <- data.frame(var=names(temp)[-1],imps = mranger$variable.importance/max(mranger$variable.importance))
-
 mranger_imp %>% 
   ggplot(aes(imps,x=reorder(var,imps)))+
   geom_point(size=3,colour="black")+
@@ -187,17 +188,35 @@ mranger_imp %>%
   labs(x="predictor",y="importance")+
   theme_bw(18)
  
- # it turned out that race is the least immportant variable??????
+# it turned out that race is the least important variable??????
+# possibly because they are not the same types of variable (numeric, categorical), therefore the method is problematic 
 # the biggest question is: how to dissociate the factor of race from the rest
 
 #     2.1.2 other statistical methods, anova
 
 
-#test 2.2 convert race into continous variables 
+#test 2.2 convert discreet into continuous variables 
 
+# test.2.2.1 convert race 
+nraces = races
+nraces$ethnicity.y[which(nraces$ethnicity.y =='white')] <- '1'
+nraces$ethnicity.y[which(nraces$ethnicity.y =='latinx')] <- '2'
+nraces$ethnicity.y[which(nraces$ethnicity.y =='asian')] <- '3'
+nraces$ethnicity.y[which(nraces$ethnicity.y =='black')] <- '4'
+as.numeric(nraces$ethnicity.y)
 
-# is it necesary to include rating as well
+nraces$trait 
+#meaning of numbers: the smaller the number is, the lighter the skin color is
 
+nraces$smallrt = nraces$rt/1000
+
+cor(nraces$ethnicity.y,nraces$smallrt,method="pearson")
+ggplot(nraces,aes(x=ethnicity.y,y=smallrt))+ geom_point(size=1,shape=15)+geom_smooth(method=lm)
+
+#even if it is converted into numeric variables, it's still difficult to pinpoint the correlation between the two
+# is it necessary to include rating as well
+
+#test 2.2.2 convert traits???
 
 
 
